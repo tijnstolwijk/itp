@@ -34,7 +34,7 @@ func imgMatrix(img image.Image) *Matrix {
   
   matrix := *newMatrix(width, height)
   for y := 0; y < img.Bounds().Max.Y; y++ {
-    for x := 0; y < img.Bounds().Max.X; x++ {
+    for x := 0; x < img.Bounds().Max.X; x++ {
       r, g, b, _ := img.At(x, y).RGBA()
       rInt := int(r >> 8)
       gInt := int(g >> 8)
@@ -65,9 +65,8 @@ func constructAddress(x, y int, b, g, r string) string {
 
   return fmt.Sprintf("2001:610:1908:a000:%s:%s:%s%s:%sff", xS, yS, b, g, r)
 }
-func precomputePackets(matrixPtr *Matrix, xZero, yZero int64) (buffers [][]byte, addresses []net.IP) {
+func precomputePackets(matrixPtr *Matrix, xZero, yZero int64) (buffers [][]byte) {
   buffers = make([][]byte, 0)
-  addresses = make([]net.IP, 0)
   matrix := *matrixPtr
   for y := range matrix {
     for x := range matrix[y] {
@@ -77,7 +76,6 @@ func precomputePackets(matrixPtr *Matrix, xZero, yZero int64) (buffers [][]byte,
       srcAddr := net.ParseIP("fe80::1")
       dstAddrStr := constructAddress(int(xZero)+x, int(yZero)+y, b, g, r)
       dstAddr := net.ParseIP(dstAddrStr)
-      addresses = append(addresses, dstAddr)
 
       log.Printf("Precomputed packet with address %s\n", dstAddrStr)
       ipv6 := &layers.IPv6{
@@ -143,9 +141,9 @@ func main() {
   matrix := imgMatrix(img)
   log.Print("Matrix built")
 
-  packets, _ := precomputePackets(matrix, xZero, yZero)
+  packets:= precomputePackets(matrix, xZero, yZero)
 
-  sock, err := syscall.Socket(syscall.AF_INET6, syscall.SOCK_DGRAM, syscall.IPPROTO_UDP)
+  sock, err := syscall.Socket(syscall.AF_INET6, syscall.SOCK_RAW, syscall.IPPROTO_RAW)
   if err != nil {
     log.Fatal("Error opening raw socket\n", err)
   }
@@ -157,6 +155,7 @@ func main() {
     log.Fatal("Incorrect ipv6?")
   }
   dstAddress := &syscall.SockaddrInet6{
+    Port: 0,
     Addr: [16]byte{byteDst[0],byteDst[1],byteDst[2],byteDst[3],
                     byteDst[4],byteDst[5],byteDst[6],byteDst[7],
                     byteDst[8],byteDst[9],byteDst[10],byteDst[11],
