@@ -33,8 +33,8 @@ func imgMatrix(img image.Image) *Matrix {
   height := img.Bounds().Max.Y 
   
   matrix := *newMatrix(width, height)
-  for y := range img.Bounds().Max.Y {
-    for x := range img.Bounds().Max.X {
+  for y := 0; y < img.Bounds().Max.Y; y++ {
+    for x := 0; y < img.Bounds().Max.X; x++ {
       r, g, b, _ := img.At(x, y).RGBA()
       rInt := int(r >> 8)
       gInt := int(g >> 8)
@@ -59,9 +59,9 @@ func hexColors(pixel *Pixel) (bS, gS, rS string){
 
 func constructAddress(x, y int, b, g, r string) string {
   xS := fmt.Sprintf("%x", x)
-  if len(xS) < 4 { for range 4 - len(xS) {xS = "0" + xS}}
+  if len(xS) < 4 { for i := 0; i < 4 - len(xS); i++ {xS = "0" + xS}}
   yS := fmt.Sprintf("%x", y)
-  if len(yS) < 4 { for range 4 - len(yS) {yS = "0" + yS}}
+  if len(yS) < 4 { for i:= 0; i < 4 - len(yS); i++ {yS = "0" + yS}}
 
   return fmt.Sprintf("2001:610:1908:a000:%s:%s:%s%s:%sff", xS, yS, b, g, r)
 }
